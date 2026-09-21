@@ -229,7 +229,8 @@ options:
 
 ## List of Bots
 
-TBD.
+*[https://bsky.app/profile/aoihal-ppbot.bsky.social](https://bsky.app/profile/aoihal-ppbot.bsky.social) 
+HAL Preprints/Working Paper announcement bot (unofficial) 
 
 ## Author
 So Okada, so.okada@gmail.com, https://so-okada.github.io/
