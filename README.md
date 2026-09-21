@@ -1,8 +1,9 @@
 # Application Info
 
 aoiHAL delivers new submissions of preprints/working papers on HAL
-(Hyper Articles en Ligne) as Bluesky posts. We use python3 scripts
-with atproto. aoiHAL is not affiliated with HAL or the CCSD.
+(Hyper Articles en Ligne) as Bluesky posts. aoi means blue (青い/あお
+い) in Japanese. We use python3 scripts with atproto. aoiHAL is not
+affiliated with HAL or the CCSD.
 
 
 ## Setup
