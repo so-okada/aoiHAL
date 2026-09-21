@@ -239,16 +239,19 @@ So Okada, so.okada@gmail.com, https://so-okada.github.io/
 
 This is an open-science practice (see
 https://github.com/so-okada/twXiv#motivation).  Since 2013-04, the
-author has been running Twitter bots for all arXiv math categories
-with [twXiv](https://github.com/so-okada/twXiv).  Since 2023-01, the
-author has been running Mastodon bots for all arXiv categories with
+author has been running Twitter bots for all
+[arXiv](https://arxiv.org) math categories with
+[twXiv](https://github.com/so-okada/twXiv).  Since 2023-01, the author
+has been running Mastodon bots for all arXiv categories with
 [toXiv](https://github.com/so-okada/toXiv).  Since 2025-02, the author
 has been running Bluesky bots for all arXiv categories with
 [bXiv](https://github.com/so-okada/bXiv).  Since 2026-07, the author
-has been running a Bluesky bot for SciELO Preprints with
-[aozoraSciELO](https://github.com/so-okada/aozoraSciELO). Since 2026-09, 
-the author has been running a Bluesky bot for [HAL](https://hal.science/)
-preprints/working papers with [aoiHAL](https://github.com/so-okada/aoiHAL).
+has been running a Bluesky bot for [SciELO
+Preprints](https://preprints.scielo.org/index.php/scielo) with
+[aozoraSciELO](https://github.com/so-okada/aozoraSciELO). Since
+2026-09, the author has been running a Bluesky bot for
+[HAL](https://hal.science/) preprints/working papers with
+[aoiHAL](https://github.com/so-okada/aoiHAL).
 
 
 ## License
