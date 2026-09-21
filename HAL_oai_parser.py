@@ -37,6 +37,8 @@ from aoiHAL_variables import hal_user_agent
 hal_oai = "https://api.archives-ouvertes.fr/oai/hal/"
 hal_oai_set = "type:UNDEFINED"
 hal_oai_prefix = "xml-tei"
+# safety cap on resumptionToken paging (100 records per page)
+hal_oai_max_pages = 500
 
 NS = {
     "oai": "http://www.openarchives.org/OAI/2.0/",
@@ -233,7 +235,9 @@ def fetch(days, timeout=60, page_sleep=5):
     docs = []
     num_requests = 0
     complete_size = None
+    seen_tokens = set()
     while True:
+        t0 = time.time()
         content = _get(url, timeout)
         num_requests += 1
         root = ET.fromstring(content)
@@ -262,8 +266,23 @@ def fetch(days, timeout=60, page_sleep=5):
         token = lr.find("oai:resumptionToken", NS)
         if token is not None and token.get("completeListSize"):
             complete_size = int(token.get("completeListSize"))
+        print(
+            "HAL OAI page " + str(num_requests)
+            + " (" + str(round(time.time() - t0, 1)) + "s): kept "
+            + str(len(docs)) + " so far, completeListSize "
+            + str(complete_size),
+            flush=True,
+        )
         if token is None or not (token.text or "").strip():
             break
+        tok = token.text.strip()
+        if tok in seen_tokens:
+            raise ValueError("OAI-PMH resumptionToken loop")
+        seen_tokens.add(tok)
+        if num_requests >= hal_oai_max_pages:
+            raise ValueError(
+                "OAI-PMH: more than " + str(hal_oai_max_pages) + " pages"
+            )
         url = hal_oai + "?" + urllib.parse.urlencode(
             {"verb": "ListRecords", "resumptionToken": token.text.strip()}
         )

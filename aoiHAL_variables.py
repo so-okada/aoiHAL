@@ -11,9 +11,9 @@ hal_user_agent = (
 # HAL OAI-PMH timeout in seconds
 hal_feed_timeout = 60
 
-# pacing of HAL OAI-PMH requests: 1 request per 10 seconds
+# pacing of HAL OAI-PMH requests
 hal_call_limit = 1
-hal_call_period = 10
+hal_call_period = 5
 
 # retries on HTTP/XML/OAI errors only (an empty feed is not an error)
 hal_max_trial = 2
