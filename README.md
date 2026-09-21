@@ -246,8 +246,10 @@ author has been running Mastodon bots for all arXiv categories with
 has been running Bluesky bots for all arXiv categories with
 [bXiv](https://github.com/so-okada/bXiv).  Since 2026-07, the author
 has been running a Bluesky bot for SciELO Preprints with
-[aozoraSciELO](https://github.com/so-okada/aozoraSciELO).  aoiHAL
-extends this practice to HAL.
+[aozoraSciELO](https://github.com/so-okada/aozoraSciELO). Since 2026-09, 
+the author has been running Bluesky bot for HAL preprints/working papers
+with [aoiHAL](https://github.com/so-okada/aoiHAL).
+
 
 ## License
 [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html)
