@@ -1,0 +1,8 @@
+{
+  "all": {
+    "username": "xxxxx.bsky.social",
+    "post_summary_log": "logs/all_post_summary_log.csv",
+    "post_log": "logs/all_post_log.csv",
+    "reply_log": "logs/all_reply_log.csv"
+  }
+}
