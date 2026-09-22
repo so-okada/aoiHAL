@@ -24,10 +24,8 @@ hal_max_trial = 2
 hal_call_sleep = 5 * 60
 main_thread_wait = 10
 
-# days to look back when retrieving from HAL (hal_days_monday on
-# Mondays); overridden by --days / -d
-hal_days = 1
-hal_days_monday = 3
+# days to look back when retrieving from HAL; overridden by --days / -d
+hal_days = 3
 
 # max post length on Bluesky
 max_len = 300

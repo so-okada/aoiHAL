@@ -8,7 +8,6 @@
 
 import time
 import threading
-from datetime import datetime, timezone
 from ratelimit import limits, sleep_and_retry
 
 from aoiHAL_variables import *
@@ -18,15 +17,6 @@ import HAL_search_parser as hspa
 
 _cache = {"days": None, "docs": None, "num_found": 0}
 _cache_lock = threading.Lock()
-
-
-def days_to_fetch():
-    """Number of past days to retrieve: hal_days, or hal_days_monday
-    on Mondays."""
-    weekday = datetime.now(timezone.utc).weekday()
-    if weekday == 0:  # Monday
-        return hal_days_monday
-    return hal_days
 
 
 @sleep_and_retry
@@ -76,8 +66,8 @@ def hal_docs(days):
 
 def hal_entries(cat, days=None):
     """HAL_feed_parser.retrieve object of one category for the last
-    `days` days (days_to_fetch() if None)."""
+    `days` days (hal_days if None)."""
     if days is None:
-        days = days_to_fetch()
+        days = hal_days
     docs, num_found = hal_docs(days)
     return hfpa.retrieve(cat, docs, num_found)
