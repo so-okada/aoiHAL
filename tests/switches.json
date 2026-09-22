@@ -3,8 +3,6 @@
     "username": "xxxxx.bsky.social",
     "password": "xxxx-xxxx-xxxx-xxxx",
     "newsubmissions": 1,
-    "abstracts": 0,
-    "quote_replacements": 0,
-    "repost_replacements": 0
+    "abstracts": 0
   }
 }

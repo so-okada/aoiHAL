@@ -36,8 +36,8 @@ parser.add_argument(
     "--days", "-d",
     type=int,
     default=None,
-    help="number of past days to harvest from HAL "
-         "(default: hal_days in aoiHAL_variables.py)",
+    help="number of past days to retrieve from HAL "
+         "(default values in aoiHAL_variables.py)",
 )
 parser.add_argument(
     "--mode", "-m",

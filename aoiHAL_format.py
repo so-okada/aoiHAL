@@ -13,7 +13,6 @@ def format(entries):
     return [format_each(one) for one in entries]
 
 
-# format each new submission
 def tag(entry):
     """Domain tag for an article post, e.g. ' [math.math-co]'."""
     if not domain_tag or not entry.get("primary_domain"):
@@ -24,8 +23,7 @@ def tag(entry):
 def format_each(orig_entry):
     entry = orig_entry.copy()
     entry["tag"] = tag(entry)
-    # one URL per HAL post (unlike bXiv which has abs+pdf+html),
-    # plus the domain tag
+    # one URL per post, plus the domain tag
     fixed_length = (
         urls_len + newsub_spacer + margin + len(list(entry["tag"]))
     )

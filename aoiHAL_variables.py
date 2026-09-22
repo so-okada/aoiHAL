@@ -8,21 +8,24 @@ hal_user_agent = (
     "aoiHAL/1.0 (paper announcement bot; +https://github.com/so-okada/aoiHAL)"
 )
 
-# HAL OAI-PMH timeout in seconds
+# HAL search API timeout in seconds
 hal_feed_timeout = 60
 
-# pacing of HAL OAI-PMH requests
+# rows per HAL search request; a run pages sequentially only if a
+# window holds more preprints than this
+hal_feed_rows = 1000
+
+# pacing of HAL search requests
 hal_call_limit = 1
 hal_call_period = 5
 
-# retries on HTTP/XML/OAI errors only (an empty feed is not an error)
+# retries on HTTP/JSON errors only (an empty feed is not an error)
 hal_max_trial = 2
 hal_call_sleep = 5 * 60
 main_thread_wait = 10
 
-# days to look back when harvesting HAL (hal_days_monday on Mondays);
-# the post log skips entries already posted.
-# can be overridden at runtime with --days / -d.
+# days to look back when retrieving from HAL (hal_days_monday on
+# Mondays); overridden by --days / -d
 hal_days = 1
 hal_days_monday = 3
 
@@ -32,12 +35,11 @@ max_len = 300
 # HAL URLs vary in length by subdomain:
 #   https://hal.science/hal-XXXXXXXXXXX    ~35 chars
 #   https://shs.hal.science/halshs-XXXXXX  ~42 chars
-#   https://theses.hal.science/tel-XXXXXX  ~41 chars
 #   https://polytechnique.hal.science/...  ~48 chars
 # use 50 as safe upper bound
 url_len = 50
 
-# posts for new submissions: one URL per post (unlike bXiv's 3)
+# one URL per post
 url_margin = 1
 urls_len = url_len + url_margin
 

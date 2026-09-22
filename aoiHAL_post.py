@@ -10,7 +10,7 @@ import traceback
 from atproto import Client
 import pandas as pd
 from threading import Thread
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from ratelimit import limits, sleep_and_retry, rate_limited
 from aoiHAL_variables import *
 import aoiHAL_format as aHf
@@ -24,13 +24,10 @@ def main(switches, logfiles, captions, pt_days, pt_mode):
     client_dict = {}
     update_dict = {}
     entries_dict = {}
-    webreplacements_dict = {}
     caption_dict = {}
 
     newsubmission_mode = {}
     abstract_mode = {}
-    quote_replacement_mode = {}
-    repost_replacement_mode = {}
 
     for cat in switches:
         # no Bluesky login in stdout mode
@@ -42,12 +39,6 @@ def main(switches, logfiles, captions, pt_days, pt_mode):
         )
         newsubmission_mode[cat] = int(switches[cat]["newsubmissions"])
         abstract_mode[cat] = int(switches[cat]["abstracts"])
-        quote_replacement_mode[cat] = int(
-            switches[cat]["quote_replacements"]
-        )
-        repost_replacement_mode[cat] = int(
-            switches[cat]["repost_replacements"]
-        )
         caption_dict[cat] = captions.get(cat, "")
 
     # retrieval / new submissions / abstracts
@@ -82,101 +73,15 @@ def main(switches, logfiles, captions, pt_days, pt_mode):
     print("joining threads of retrieval/new submissions/abstracts")
     [th.join() for th in threads]
 
-    if not logfiles:
-        ending_time = datetime.now(timezone.utc).replace(microsecond=0)
-        print(
-            "\n**process ended at " + str(ending_time) + " (UTC)"
-            + "\n**elapsed time from the start: "
-            + str(ending_time - starting_time)
-        )
-        return None
-
-    # replacements
-    replacement_time = datetime.now(timezone.utc).replace(microsecond=0)
-    print(
-        "\n**replacement process started at "
-        + str(replacement_time) + " (UTC)"
-        + "\n**elapsed time from the start: "
-        + str(replacement_time - starting_time)
-    )
-
-    print("\n**quote-replacement starts")
-    for cat in switches:
-        webreplacements_dict[cat] = []
-        if entries_dict.get(cat):
-            for each in entries_dict[cat].replacements:
-                # only post replacements up to version 5
-                try:
-                    ver = int(each["version"])
-                except (ValueError, TypeError):
-                    ver = 0
-                if 1 < ver <= 5:
-                    webreplacements_dict[cat].append(each)
-
-    threads = []
-    for i, cat in enumerate(switches):
-        if webreplacements_dict[cat] and quote_replacement_mode[cat]:
-            th = Thread(
-                name=cat,
-                target=quote_replacement,
-                args=(
-                    logfiles,
-                    cat,
-                    client_dict[cat],
-                    update_dict[cat],
-                    webreplacements_dict[cat],
-                    pt_mode,
-                ),
-            )
-            threads.append(th)
-            print("starting quote-replacement thread for " + th.name)
-            th.start()
-            if i != len(switches) - 1:
-                print("waiting for next quote-replacement thread")
-                time.sleep(main_thread_wait)
-
-    if threads:
-        print("joining quote-replacement threads")
-        [th.join() for th in threads]
-
-    print("\n**repost-replacement starts")
-    threads = []
-    for i, cat in enumerate(switches):
-        if webreplacements_dict[cat] and repost_replacement_mode[cat]:
-            th = Thread(
-                name=cat,
-                target=repost_replacement,
-                args=(
-                    logfiles,
-                    cat,
-                    client_dict[cat],
-                    update_dict[cat],
-                    webreplacements_dict[cat],
-                    pt_mode,
-                ),
-            )
-            threads.append(th)
-            print("starting repost-replacement thread for " + th.name)
-            th.start()
-            if i != len(switches) - 1:
-                print("waiting for next repost-replacement thread")
-                time.sleep(main_thread_wait)
-
-    if threads:
-        print("joining repost-replacement threads")
-        [th.join() for th in threads]
-
     ending_time = datetime.now(timezone.utc).replace(microsecond=0)
     print(
         "\n**process ended at " + str(ending_time) + " (UTC)"
         + "\n**elapsed time from the start: "
         + str(ending_time - starting_time)
-        + "\n**elapsed time from the replacement start: "
-        + str(ending_time - replacement_time)
     )
 
 
-# post/repost/unrepost/reply/quote with overall limit
+# post/reply with overall limit
 @sleep_and_retry
 @limits(calls=overall_bsky_limit_call, period=overall_bsky_limit_period)
 def update(
@@ -245,36 +150,6 @@ def update(
             )
             traceback.print_exc()
 
-    elif pt_method in ("repost_replacement",):
-        try:
-            result = client.repost(post_uri, post_cid)
-            update_print(
-                cat, hal_id, text, result.uri, result.cid,
-                "", "", "", "", pt_method, pt_mode,
-            )
-        except Exception:
-            time_now = datetime.now(timezone.utc).replace(microsecond=0)
-            print(
-                "\n**error to repost**\nutc: " + str(time_now)
-                + error_text
-            )
-            traceback.print_exc()
-
-    elif pt_method == "unrepost":
-        try:
-            result = client.delete_repost(post_uri)
-            update_print(
-                cat, hal_id, text, "", "", "", "",
-                "", "", pt_method, pt_mode,
-            )
-        except Exception:
-            time_now = datetime.now(timezone.utc).replace(microsecond=0)
-            print(
-                "\n**error to unrepost**\nutc: " + str(time_now)
-                + error_text
-            )
-            traceback.print_exc()
-
     elif pt_method == "reply":
         try:
             reply_ref = {
@@ -295,29 +170,6 @@ def update(
             time_now = datetime.now(timezone.utc).replace(microsecond=0)
             print(
                 "\n**error to reply**\nutc: " + str(time_now)
-                + error_text
-            )
-            traceback.print_exc()
-
-    elif pt_method == "quote":
-        try:
-            result = client.send_post(
-                text=text,
-                facets=generate_facets_for_urls(text),
-                embed={
-                    "$type": "app.bsky.embed.record",
-                    "record": {"uri": post_uri, "cid": post_cid},
-                },
-            )
-            update_print(
-                cat, hal_id, text, result.uri, result.cid,
-                root_uri, root_cid, parent_uri, parent_cid,
-                pt_method, pt_mode,
-            )
-        except Exception:
-            time_now = datetime.now(timezone.utc).replace(microsecond=0)
-            print(
-                "\n**error to quote**\nutc: " + str(time_now)
                 + error_text
             )
             traceback.print_exc()
@@ -361,15 +213,6 @@ def update_log(logfiles, cat, total, hal_id, result, pt_method, pt_mode):
             log_text,
             columns=["utc", "total", "username", "uri", "cid"]
         )
-    elif pt_method == "unrepost":
-        log_text = [
-            [time_now, hal_id, logfiles[cat]["username"], "", ""]
-        ]
-        df = pd.DataFrame(
-            log_text,
-            columns=["utc", "hal_id", "username", "uri", "cid"]
-        )
-        filename = logfiles[cat][pt_method + "_log"]
     else:
         log_text = [
             [time_now, hal_id, logfiles[cat]["username"],
@@ -447,8 +290,7 @@ def intro(given_time, num, cat, caption):
     else:
         ptext += str(num) + " new articles found for "
 
-    # display category name without dots; a whole-stream bot
-    # (category "all") just says "HAL"
+    # category name without dots; "all" just says "HAL"
     if cat in ("", "all", "*"):
         ptext += "HAL"
     else:
@@ -525,139 +367,6 @@ def newsubmissions(
                     break
 
 
-def quote_replacement(logfiles, cat, client, update_limited, entries, pt_mode):
-    post_filename = logfiles[cat]["post_log"]
-    if not os.path.exists(post_filename):
-        print("no post log file for " + cat)
-        return None
-
-    try:
-        post_df = pd.read_csv(post_filename, dtype=object)
-    except Exception:
-        time_now = datetime.now(timezone.utc).replace(microsecond=0)
-        print(
-            "\n**error for post log**"
-            "\nutc: " + str(time_now)
-            + "\npost_filename: " + post_filename
-        )
-        traceback.print_exc()
-        return False
-
-    quote_filename = logfiles[cat]["quote_log"]
-    if not os.path.exists(quote_filename) and pt_mode:
-        print("posting mode without quote log file for " + cat)
-        return None
-
-    try:
-        quote_df = pd.read_csv(quote_filename, dtype=object)
-    except Exception:
-        time_now = datetime.now(timezone.utc).replace(microsecond=0)
-        print(
-            "\n**error for quote log**"
-            "\nutc: " + str(time_now)
-            + "\nquote_filename: " + quote_filename
-        )
-        traceback.print_exc()
-        return False
-
-    # avoid duplicate quote-replacements today
-    time_now = datetime.now(timezone.utc).replace(microsecond=0)
-    if pt_mode and any(
-        check_dates(time_now, datetime.fromisoformat(t))
-        for t in quote_df.utc.values
-    ):
-        print("already made quote-replacements today for " + cat)
-        return None
-
-    for each in entries:
-        hal_id = each["id"]
-        hal_url = each["hal_url"]
-        ver = each["version"]
-
-        # only quote-replace if not already done
-        already_quoted = any(
-            hal_id == row["hal_id"]
-            for _, row in quote_df.iterrows()
-        )
-        if already_quoted:
-            continue
-
-        for _, post_row in post_df.iterrows():
-            if hal_id == post_row["hal_id"]:
-                post_uri = post_row["uri"]
-                post_cid = post_row["cid"]
-                ptext = (
-                    hal_url
-                    + " has been replaced (v" + str(ver) + "). "
-                    + atproto_uri_to_url(post_uri)
-                )
-                update_limited(
-                    logfiles, cat, client, "", hal_id,
-                    ptext, post_uri, post_cid,
-                    "", "", "", "", "quote", pt_mode,
-                )
-
-
-def repost_replacement(
-    logfiles, cat, client, update_limited, entries, pt_mode
-):
-    repost_filename = logfiles[cat]["repost_replacement_log"]
-    if not os.path.exists(repost_filename):
-        print("no repost replacement log file for " + cat)
-        return False
-
-    try:
-        repost_df = pd.read_csv(repost_filename, dtype=object)
-    except Exception:
-        time_now = datetime.now(timezone.utc).replace(microsecond=0)
-        print(
-            "\n**error for repost replacement log**"
-            "\nutc: " + str(time_now)
-            + "\nrepost_filename: " + repost_filename
-        )
-        traceback.print_exc()
-        return False
-
-    quote_filename = logfiles[cat]["quote_log"]
-    if not os.path.exists(quote_filename):
-        print("no quote log file for " + cat)
-        return False
-
-    try:
-        quote_df = pd.read_csv(quote_filename, dtype=object)
-    except Exception:
-        time_now = datetime.now(timezone.utc).replace(microsecond=0)
-        print(
-            "\n**error for quote log**"
-            "\nutc: " + str(time_now)
-            + "\nquote_filename: " + quote_filename
-        )
-        traceback.print_exc()
-        return False
-
-    for each in entries:
-        hal_id = each["id"]
-        time_now = datetime.now(timezone.utc).replace(microsecond=0)
-
-        for _, quote_row in quote_df.iterrows():
-            if hal_id == quote_row["hal_id"]:
-                log_time = datetime.fromisoformat(quote_row["utc"])
-                if not check_dates(time_now, log_time):
-                    # unrepost old, repost new quote
-                    for _, repost_row in repost_df.iterrows():
-                        if hal_id == repost_row["hal_id"]:
-                            update_limited(
-                                logfiles, cat, client, "", hal_id,
-                                "", repost_row["uri"], repost_row["cid"],
-                                "", "", "", "", "unrepost", pt_mode,
-                            )
-                    update_limited(
-                        logfiles, cat, client, "", hal_id,
-                        "", quote_row["uri"], quote_row["cid"],
-                        "", "", "", "", "repost_replacement", pt_mode,
-                    )
-
-
 def logged_ids(cat, logname, logfiles):
     """Set of HAL ids already recorded in a log."""
     if not logfiles or cat not in logfiles or logname not in logfiles[cat]:
@@ -712,10 +421,7 @@ def check_log_dates(cat, logname, logfiles):
 
 
 def check_dates(time1, time2):
-    """True if time1 and time2 fall on the same calendar date (UTC).
-
-    Unlike bXiv, HAL has no weekend gap, so no weekend extension needed.
-    """
+    """True if time1 and time2 fall on the same calendar date (UTC)."""
     return time1.date() == time2.date()
 
 

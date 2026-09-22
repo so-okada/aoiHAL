@@ -28,7 +28,7 @@ aoiHAL is not affiliated with HAL or the CCSD.
 	- aoiHAL_feed.py
 	- aoiHAL_variables.py
 	- HAL_feed_parser.py
-	- HAL_oai_parser.py
+	- HAL_search_parser.py
 
 * Configure switches.json and logfiles.json for your settings.
 
@@ -36,7 +36,7 @@ aoiHAL is not affiliated with HAL or the CCSD.
 	new submissions/abstracts by aoiHAL.  Each key is a HAL primary
 	domain code (`math`, `math.math-co`, `shs`, ...) or `all` for the
 	whole HAL preprint/working papers. captions.json tells aoiHAL
-	display captions for HAL category names.
+	to display captions for HAL category names.
 
 	- logfiles.json indicates log file locations for post summaries,
 	posts, and replies.  aoiHAL uses the post log to skip entries
@@ -45,29 +45,30 @@ aoiHAL is not affiliated with HAL or the CCSD.
 * Configure aoiHAL_variables.py for your settings.
 
 	- aoiHAL_variables.py assigns format parameters for aoiHAL posts,
-	the number of days to harvest, access frequencies for HAL and
+	the number of days to retrieve, access frequencies for HAL and
 	Bluesky, the domain tag of each post, and the posting order.
 
 ## Notes
 
-* aoiHAL harvests HAL by the [OAI-PMH
-  protocol](https://api.archives-ouvertes.fr/docs/oai) with
-  HAL_oai_parser.py for `type:UNDEFINED`, which is HAL's document type
-  labeled "Preprints, Working Papers, ..." (« Pré-publication,
-  Document de travail ») in their `xml-tei` format.  aoiHAL uses lists
-  of first versions with a full-text file in the query
-  period. HAL_feed_parser.py splits them into categories by their
-  primary HAL domains.  We use these via aoiHAL_feed.py to regularly
-  obtain data.
-  
+* aoiHAL retrieves HAL records by the [HAL search
+  API](https://api.archives-ouvertes.fr/docs/search) with
+  HAL_search_parser.py for `docType_s:UNDEFINED`, which is HAL's
+  document type labeled "Preprints, Working Papers, ..." («
+  Pré-publication, Document de travail »), in their `json` format.
+  aoiHAL uses lists of first versions with a full-text file released
+  in the query period (`releasedDate_tdate`).  HAL_feed_parser.py
+  splits them into categories by their primary HAL domains.  We use
+  these via aoiHAL_feed.py to regularly obtain data.
+
 * aoiHAL retrieves from HAL sequentially, without parallel requests:
-  one OAI-PMH harvest per run, shared by all categories, with pages
+  one search request per run, shared by all categories, with further
+  pages (only if a period holds more than `hal_feed_rows` preprints)
   followed one at a time (`hal_call_period` seconds apart).
 
 * Unlike arXiv, HAL is a continuous repository with no fixed daily
-  announcement cycle, and the OAI-PMH date selection is by the last
-  modification date of a record.  aoiHAL harvests the last N days
-  on each run (`hal_days` in aoiHAL_variables.py or `-d`).
+  announcement cycle.  aoiHAL retrieves the last N days on each run
+  (`hal_days` in aoiHAL_variables.py or `-d`), and the post log skips
+  entries already posted.
 
 * On the use of HAL metadata: HAL's own documentation states that
   metadata are under a [CC0
@@ -84,8 +85,7 @@ aoiHAL is not affiliated with HAL or the CCSD.
   partielle par moissonnage dans le respect du code de la propriété
   intellectuelle. Elles sont distribuées [sous licence
   CC0](https://creativecommons.org/publicdomain/zero/1.0/). Obligation
-  de citer la source (exemple : hal.science/hal-00000001). » (See also
-  [What is an OAI-PMH endpoint?](https://support.core.ac.uk/support/solutions/articles/80000945285-what-is-an-oai-pmh-endpoint-).)
+  de citer la source (exemple : hal.science/hal-00000001). »
 
 
 ## Usage
@@ -105,8 +105,8 @@ options:
                         log file names in json
   --captions CAPTIONS, -c CAPTIONS
                         captions of HAL categories in json
-  --days DAYS, -d DAYS  number of past days to harvest from HAL (default:
-                        hal_days in aoiHAL_variables.py)
+  --days DAYS, -d DAYS  number of past days to retrieve from HAL (default
+                        values in aoiHAL_variables.py)
   --mode {0,1}, -m {0,1}
                         1 for bsky posting and 0 for stdout only
 ```
@@ -122,7 +122,7 @@ options:
 	starting thread of retrieval/new submissions/abstracts for all
 	getting HAL entries for all
 	joining threads of retrieval/new submissions/abstracts
-	HAL preprints of the last 3 day(s): 84 (numFound 1179, 12 request(s))
+	HAL preprints of the last 3 day(s): 84 (numFound 84, 1 request(s))
 	new submissions for all
 	no log files
 	no log files
@@ -171,7 +171,7 @@ options:
 	starting thread of retrieval/new submissions/abstracts for all
 	getting HAL entries for all
 	joining threads of retrieval/new submissions/abstracts
-	HAL preprints of the last 3 day(s): 84 (numFound 1179, 12 request(s))
+	HAL preprints of the last 3 day(s): 84 (numFound 84, 1 request(s))
 	new submissions for all
 	79 already posted entries skipped for all
 
@@ -225,11 +225,12 @@ options:
 
 * 0.0.1, initial release, 2026-05-17.
 * 0.0.2, public release, 2026-09-21.
+* 0.0.3, HAL search API instead of OAI-PMH, 2026-09-22.
 
 
 ## List of Bots
 
-*[https://bsky.app/profile/aoihal-ppbot.bsky.social](https://bsky.app/profile/aoihal-ppbot.bsky.social) 
+* [https://bsky.app/profile/aoihal-ppbot.bsky.social](https://bsky.app/profile/aoihal-ppbot.bsky.social) 
 HAL Preprints/Working Paper announcement bot (unofficial) 
 
 ## Author

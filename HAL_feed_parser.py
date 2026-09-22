@@ -3,15 +3,16 @@
 # a part of aoiHAL: entry builder for HAL (Hyper Articles en Ligne) records
 # https://github.com/so-okada/aoiHAL
 #
-# Records are harvested by HAL_oai_parser.fetch (OAI-PMH, xml-tei) as
-# dicts keyed like HAL's search API fields (halId_s, title_s, ...);
-# retrieve() below turns them into per-category entries.
+# Records are the JSON docs of HAL's search API fetched by
+# HAL_search_parser.fetch (halId_s, title_s, ...); retrieve() below
+# turns them into per-category entries.
 #
 # Design:
-#   * one global harvest per run for the whole preprint stream, split
+#   * one global request per run for the whole preprint stream, split
 #     locally by primaryDomain_s.
-#   * feed rule: docType UNDEFINED ("Preprints, Working Papers, ..."),
-#     has a file, version 1, released (made public) in the window.
+#   * feed rule (applied server-side): docType UNDEFINED ("Preprints,
+#     Working Papers, ..."), has a file, version 1, released (made
+#     public) in the window.
 #   * HAL text carries HTML entities (e.g. &#x27E8;), so text fields
 #     are html.unescape'd here, once.
 
@@ -56,11 +57,7 @@ def matches_category(doc, cat):
 
 
 class retrieve:
-    """Entries of one category, built from globally fetched docs.
-
-    Keeps the attribute names of the original per-category parser so
-    aoiHAL_post.py is unaffected.
-    """
+    """Entries of one category, built from globally fetched docs."""
 
     def __init__(self, cat, docs, num_found=None):
         self.cat = cat
@@ -109,10 +106,7 @@ class retrieve:
             }
             entries.append(entry)
 
-        # posting order: grouped by primary domain (string order keeps
-        # a top-level domain and its subdomains together, e.g. math,
-        # math.math-ap, math.math-nt), release time within a domain;
-        # or plain release order
+        # posting order: see post_order in aoiHAL_variables.py
         if post_order == "domain":
             entries.sort(key=lambda e: (
                 e["primary_domain"], e["released_date"], e["id"]))
@@ -131,13 +125,8 @@ class retrieve:
         self.produced_dates = [e["produced_date"] for e in entries]
         self.total = len(entries)
 
+        # all entries are first versions under the feed rule
         self.newsubmissions = [
             e for e in entries if e["label"] == "New submission"
         ]
-        # always empty under the version-1 feed rule; kept for the
-        # attribute interface of aoiHAL_post.py
-        self.replacements = [
-            e for e in entries if e["label"] != "New submission"
-        ]
         self.num_newsubmissions = len(self.newsubmissions)
-        self.num_replacements = len(self.replacements)

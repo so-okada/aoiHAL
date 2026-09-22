@@ -3,8 +3,8 @@
 # a part of aoiHAL for retrieval of HAL feeds
 # https://github.com/so-okada/aoiHAL
 #
-# One global OAI-PMH harvest per run, shared by all category threads
-# (cached under a lock); each category then filters locally.
+# One global HAL search request per run, shared by all category
+# threads (cached under a lock); each category then filters locally.
 
 import time
 import threading
@@ -13,7 +13,7 @@ from ratelimit import limits, sleep_and_retry
 
 from aoiHAL_variables import *
 import HAL_feed_parser as hfpa
-import HAL_oai_parser as hopa
+import HAL_search_parser as hspa
 
 
 _cache = {"days": None, "docs": None, "num_found": 0}
@@ -21,7 +21,7 @@ _cache_lock = threading.Lock()
 
 
 def days_to_fetch():
-    """Number of past days to harvest: hal_days, or hal_days_monday
+    """Number of past days to retrieve: hal_days, or hal_days_monday
     on Mondays."""
     weekday = datetime.now(timezone.utc).weekday()
     if weekday == 0:  # Monday
@@ -32,7 +32,7 @@ def days_to_fetch():
 @sleep_and_retry
 @limits(calls=hal_call_limit, period=hal_call_period)
 def hal_fetch(days):
-    return hopa.fetch(
+    return hspa.fetch(
         days,
         timeout=hal_feed_timeout,
         page_sleep=hal_call_period,
@@ -40,9 +40,9 @@ def hal_fetch(days):
 
 
 def hal_docs(days):
-    """All HAL preprints of the last `days` days, harvested once per run.
+    """All HAL preprints of the last `days` days, retrieved once per run.
 
-    Retries only on exceptions (HTTP/XML/OAI errors); an empty result is
+    Retries only on exceptions (HTTP/JSON errors); an empty result is
     a valid answer and is cached like any other.  Raises after
     hal_max_trial failures.
     """
@@ -75,12 +75,8 @@ def hal_docs(days):
 
 
 def hal_entries(cat, days=None):
-    """Retrieve HAL entries for the given category over the last N days.
-
-    If days is None, falls back to days_to_fetch() automatic logic.
-    Returns a HAL_feed_parser.retrieve object, or raises on persistent
-    failure.
-    """
+    """HAL_feed_parser.retrieve object of one category for the last
+    `days` days (days_to_fetch() if None)."""
     if days is None:
         days = days_to_fetch()
     docs, num_found = hal_docs(days)
