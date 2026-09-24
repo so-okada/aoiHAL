@@ -90,7 +90,7 @@ class retrieve:
                 ),
                 "abstract": unescape(first(doc.get("abstract_s", []))),
                 "en_abstract": unescape(first(doc.get("en_abstract_s", []))),
-                "label": "New submission" if version == 1 else "Replacement",
+                "label": "New submission",
                 "version": str(version),
                 "primary_domain": doc.get("primaryDomain_s", "") or "",
                 "domains": sorted({
