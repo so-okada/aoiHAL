@@ -411,7 +411,12 @@ def check_log_dates(cat, logname, logfiles):
         return False
 
     for _, row in df.iterrows():
-        log_time = datetime.fromisoformat(row["utc"])
+        # skip a malformed row, e.g. one left half-written by a crash
+        try:
+            log_time = datetime.fromisoformat(row["utc"])
+        except (TypeError, ValueError):
+            print("skipping malformed log row in " + filename)
+            continue
         if (
             check_dates(log_time, time_now)
             and row["username"] == logfiles[cat]["username"]

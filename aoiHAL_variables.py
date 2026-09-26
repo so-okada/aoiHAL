@@ -34,7 +34,8 @@ max_len = 300
 #   https://hal.science/hal-XXXXXXXXXXX    ~35 chars
 #   https://shs.hal.science/halshs-XXXXXX  ~42 chars
 #   https://polytechnique.hal.science/...  ~48 chars
-# use 50 as safe upper bound
+# reserve at least 50; aoiHAL_format.py reserves the actual length of
+# a longer URL
 url_len = 50
 
 # one URL per post
