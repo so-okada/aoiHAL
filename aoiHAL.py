@@ -19,7 +19,6 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "--switches_keys", "-s",
     required=True,
-    default="",
     help="output switches and api keys in json",
 )
 parser.add_argument(
@@ -55,27 +54,27 @@ pt_days = args.days
 pt_mode = args.mode
 
 try:
-    f = open(switches)
+    with open(switches) as f:
+        switches = json.load(f)
 except Exception:
     traceback.print_exc()
     raise Exception("cannot obtain output switches and api keys")
-switches = json.load(f)
 
 if logfiles:
     try:
-        f = open(logfiles)
+        with open(logfiles) as f:
+            logfiles = json.load(f)
     except Exception:
         traceback.print_exc()
         raise Exception("cannot obtain log filenames")
-    logfiles = json.load(f)
 
 if captions:
     try:
-        f = open(captions)
+        with open(captions) as f:
+            captions = json.load(f)
     except Exception:
         traceback.print_exc()
         raise Exception("cannot obtain captions of HAL categories")
-    captions = json.load(f)
 else:
     captions = {}
 

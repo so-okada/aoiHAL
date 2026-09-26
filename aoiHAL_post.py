@@ -10,6 +10,7 @@ import traceback
 from atproto import Client
 import pandas as pd
 from threading import Thread
+from types import SimpleNamespace
 from datetime import datetime, timezone
 from ratelimit import limits, sleep_and_retry, rate_limited
 from aoiHAL_variables import *
@@ -108,7 +109,8 @@ def update(
             root_uri, root_cid, parent_uri, parent_cid,
             pt_method, pt_mode,
         )
-        return result
+        # a placeholder result so that abstract replies print as well
+        return SimpleNamespace(uri="", cid="")
 
     if not client:
         update_print(
