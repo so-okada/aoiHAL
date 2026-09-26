@@ -34,7 +34,8 @@ max_len = 300
 #   https://hal.science/hal-XXXXXXXXXXX    ~35 chars
 #   https://shs.hal.science/halshs-XXXXXX  ~42 chars
 #   https://polytechnique.hal.science/...  ~48 chars
-# use 50 as safe upper bound
+# reserve at least 50; aoiHAL_format.py reserves the actual length of
+# a longer URL
 url_len = 50
 
 # one URL per post
@@ -56,7 +57,8 @@ newsub_spacer = 1
 margin = 2
 
 # abstract tag overhead: " [X/Y of <url>]"
-# " [" (2) + counter max "10/10" (5) + " of " (4) + url (50) + "]" (1) = 62
+# " [" (2) + counter max "10/10" (5) + " of " (4) + "]" (1) = 12,
+# + url (50) + url_margin (1) + 1 spare = 64
 abst_tag = 12 + (url_len + url_margin) + 1
 
 # rate limit for each Bluesky account

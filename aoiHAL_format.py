@@ -23,9 +23,11 @@ def tag(entry):
 def format_each(orig_entry):
     entry = orig_entry.copy()
     entry["tag"] = tag(entry)
-    # one URL per post, plus the domain tag
+    # one URL per post, plus the domain tag; reserve the actual URL
+    # length when it exceeds url_len
+    entry_urls_len = max(urls_len, len(list(entry["hal_url"])) + url_margin)
     fixed_length = (
-        urls_len + newsub_spacer + margin + len(list(entry["tag"]))
+        entry_urls_len + newsub_spacer + margin + len(list(entry["tag"]))
     )
     orig_title = entry["title"]
 
@@ -62,7 +64,7 @@ def format_each(orig_entry):
 
     entry["separated_abstract"] = separate_abstract(
         entry["abstract"], entry["id"], entry["hal_url"],
-        max_len - abst_tag - margin
+        max_len - (abst_tag - urls_len + entry_urls_len) - margin
     )
     return entry
 
