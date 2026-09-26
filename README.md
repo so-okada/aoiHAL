@@ -67,8 +67,8 @@ aoiHAL is not affiliated with HAL or the CCSD.
 
 * Unlike arXiv, HAL is a continuous repository with no fixed daily
   announcement cycle.  aoiHAL retrieves the last N days on each run
-  (`hal_days` in aoiHAL_variables.py or `-d`), and the post log skips
-  entries already posted, so overlapping windows are harmless.
+  (`hal_days` in aoiHAL_variables.py or `-d`) and posts first
+  versions not yet in the post log.
 
 * On the use of HAL metadata: HAL's own documentation states that
   metadata are under a [CC0
